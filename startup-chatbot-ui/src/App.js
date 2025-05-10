@@ -1,96 +1,151 @@
 import React, { useState } from "react";
 
-function App() {
+export default function App() {
   const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState(null);
+  const [messages, setMessages] = useState([
+    {
+      role: "bot",
+      text: "Merhaba, Kuveyt Türk-Meet in One Asistanına hoş geldiniz. Size istediğiniz startup çözümleri sunmak için buradayım. Lütfen bana istediğiniz startup çözümünü söyleyiniz."
+    }
+  ]);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSend = async () => {
     if (!question.trim()) return;
+
+    const newMessages = [...messages, { role: "user", text: question }];
+    setMessages(newMessages);
+    setQuestion("");
     setLoading(true);
+
     try {
-      const res = await fetch("https://startup-chatbot-backend-1.onrender.com/ask", {
+      const dailyGreetings = ["selam", "selamünaleyküm", "naber", "nasılsın", "günaydın"];
+      const lower = question.toLowerCase();
+      const matchedGreeting = dailyGreetings.find(g => lower.includes(g));
+
+      if (matchedGreeting) {
+        setMessages([...newMessages, { role: "bot", text: "Merhaba! Ben iyiyim, teşekkür ederim. Size nasıl yardımcı olabilirim?" }]);
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch("https://47821dd4-2081-4b09-93a8-b1b4754e2e87-00-rintijkv4spx.janeway.replit.dev/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question })
       });
+
       const data = await res.json();
-      setAnswer(data.answer);
-    } catch (e) {
-      setAnswer("Bir hata oluştu. Lütfen daha sonra tekrar deneyin.");
+      const reply = data.answer?.trim();
+
+      if (reply && reply.length > 0) {
+        const parts = reply.split(/(?<=\n)(?=\d+\.\s)/g);
+        const formatted = parts.map(p => ({ role: "bot", text: p.trim() }));
+        setMessages([...newMessages, ...formatted]);
+      } else {
+        setMessages([...newMessages, { role: "bot", text: "Ben sadece size startup çözümleri bulma noktasında yardımcı olabilirim." }]);
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      setMessages([...messages, { role: "bot", text: "Bir hata oluştu." }]);
     } finally {
       setLoading(false);
     }
   };
 
-  const filters = [
-    "Risk Yönetimi", "Kredi", "Yapay Zeka", "Güvenlik",
-    "Kimlik Doğrulama", "Siber Güvenlik", "Veri Analizi", "Müşteri İçgörüleri"
-  ];
+  const renderMessageText = (text) => {
+    const urlRegex = /(?:Website:\s*)(https?:\/\/[^\s]+)/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = urlRegex.exec(text)) !== null) {
+      const before = text.substring(lastIndex, match.index);
+      const url = match[1];
+      parts.push(<span key={lastIndex}>{before}Website: </span>);
+      parts.push(<a key={url} href={url} target="_blank" rel="noopener noreferrer">{url}</a>);
+      lastIndex = urlRegex.lastIndex;
+    }
+
+    parts.push(<span key={lastIndex}>{text.substring(lastIndex)}</span>);
+    return parts;
+  };
 
   return (
-    <div style={{ maxWidth: 800, margin: "auto", padding: 20, fontFamily: "sans-serif" }}>
-      <h1 style={{ fontSize: 28, fontWeight: "bold" }}>Startup Çözüm Bulucu</h1>
-
-      <div style={{ marginTop: 20, padding: 15, backgroundColor: "#f3f4f6", borderRadius: 8 }}>
-        <p style={{ marginBottom: 4 }}>🔍 Merhaba! Size hangi konuda yardımcı olabilirim?</p>
-        <p style={{ fontSize: 14, color: "#555" }}>
-          İş biriminizin ihtiyaç duyduğu dijital çözümü bulmak için ne aradığınızı kısaca yazın.
-        </p>
-        <p style={{ fontSize: 12, color: "#999", marginTop: 8 }}>
-          Örn: “Kredi risk değerlendirme çözümü arıyorum” veya “Müşteri hizmetleri için chatbot önerir misin?”
-        </p>
+    <div style={{ fontFamily: "Arial", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
+      {/* Banner */}
+      <div style={{ backgroundColor: "#16A086", color: "white", padding: "15px 20px", display: "flex", alignItems: "center" }}>
+        {/*<img src="https://www.kuveytturk.com.tr/medium/GalleryImage-Image-81-2x.vsf" alt="Logo" style={{ height: 60, marginRight: 20 }} />*/}
+        <h2 style={{ margin: 0, fontSize: "1.2rem" }}>Meet-In-One Bot</h2>
       </div>
 
-      <div style={{ display: "flex", gap: 8, marginTop: 15 }}>
-        <input
-          type="text"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="Ne tür bir çözüm arıyorsunuz?"
-          style={{ flex: 1, padding: 10, borderRadius: 6, border: "1px solid #ccc" }}
-        />
-        <button onClick={handleSubmit} disabled={loading} style={{
-          padding: "10px 16px",
-          backgroundColor: "#2563eb",
-          color: "white",
-          border: "none",
-          borderRadius: 6,
-          cursor: loading ? "not-allowed" : "pointer"
-        }}>
-          {loading ? "Gönderiliyor..." : "Gönder"}
-        </button>
-      </div>
-
-      <div style={{ marginTop: 20 }}>
-        <h3>Önerilen Çözümler:</h3>
-        <div style={{ marginTop: 8, whiteSpace: "pre-line", padding: 10, backgroundColor: "#fff", border: "1px solid #ccc", borderRadius: 6 }}>
-          {answer ? answer : "Henüz bir öneri yok."}
-        </div>
-      </div>
-
-      <div style={{ marginTop: 30 }}>
-        <h4>Hızlı Filtreler:</h4>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 8 }}>
-          {filters.map((tag, i) => (
-            <span
-              key={i}
-              onClick={() => setQuestion(tag)}
-              style={{
-                backgroundColor: "#e5e7eb",
-                padding: "6px 12px",
-                borderRadius: 16,
-                cursor: "pointer",
-                fontSize: 14
-              }}
-            >
-              {tag}
-            </span>
+      {/* Chatbox */}
+      <div style={{ maxWidth: 600, margin: "20px auto", background: "white", borderRadius: 10, boxShadow: "0 4px 10px rgba(0,0,0,0.1)", display: "flex", flexDirection: "column", height: "70vh", width: "90%" }}>
+        <div style={{ flexGrow: 1, padding: 15, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+          {messages.map((msg, idx) => (
+            <div key={idx} style={{
+              backgroundColor: msg.role === "user" ? "#B2DFDB" : "#E6E6E6",
+              alignSelf: msg.role === "user" ? "flex-end" : "flex-start",
+              marginBottom: 10,
+              padding: "10px 14px",
+              borderRadius: 18,
+              maxWidth: "85%",
+              wordBreak: "break-word"
+            }}>
+              {renderMessageText(msg.text)}
+            </div>
           ))}
+          {loading && (
+            <div style={{ alignSelf: "flex-start", marginBottom: 12 }}>
+              <div className="spinner" style={{ width: 24, height: 24, border: "4px solid #ccc", borderTop: "4px solid #16A086", borderRadius: "50%", animation: "spin 1s linear infinite" }}></div>
+            </div>
+          )}
+        </div>
+
+        {/* Input Area */}
+        <div style={{ padding: 10, display: "flex", borderTop: "1px solid #ccc", flexWrap: "wrap" }}>
+          <input
+            type="text"
+            placeholder="Mesajınızı yazın..."
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            disabled={loading}
+            style={{ flexGrow: 1, padding: 12, fontSize: 16, borderRadius: 8, border: "1px solid #ccc", minWidth: 0, flex: 1 }}
+          />
+          <button
+            onClick={handleSend}
+            disabled={loading}
+            style={{
+              marginTop: 10,
+              backgroundColor: "#16A086",
+              color: "white",
+              padding: "10px 18px",
+              border: "none",
+              borderRadius: 8,
+              cursor: loading ? "not-allowed" : "pointer",
+              flexShrink: 0
+            }}
+          >
+            Gönder
+          </button>
         </div>
       </div>
+
+      {/* Footer */}
+      <div style={{ textAlign: "center", fontSize: 14, color: "#666", paddingBottom: 20 }}>
+        © 2025 MeetInOne. Tüm hakları saklıdır.
+      </div>
+
+      {/* Spinner animation */}
+      <style>
+        {`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}
+      </style>
     </div>
   );
 }
-
-export default App;

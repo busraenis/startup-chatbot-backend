@@ -73,5 +73,6 @@ Aşağıdaki startup veri setine göre birden fazla uygun çözüm öner. Her st
         ],
         temperature=0.2
     )
-
+    print("GPT cevabı:", response.choices[0].message.content)
     return JSONResponse(content={"answer": response.choices[0].message.content})
+
