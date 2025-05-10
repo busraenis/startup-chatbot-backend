@@ -54,22 +54,23 @@ export default function App() {
   };
 
   const renderMessageText = (text) => {
-    const urlRegex = /(?:Website:\s*)(https?:\/\/[^\s]+)/g;
-    const parts = [];
-    let lastIndex = 0;
-    let match;
+  const urlRegex = /Website:\s*(https?:\/\/[^\s]+)/g;
+  const parts = [];
+  let lastIndex = 0;
+  let match;
 
-    while ((match = urlRegex.exec(text)) !== null) {
-      const before = text.substring(lastIndex, match.index);
-      const url = match[1];
-      parts.push(<span key={lastIndex}>{before}Website: </span>);
-      parts.push(<a key={url} href={url} target="_blank" rel="noopener noreferrer">{url}</a>);
-      lastIndex = urlRegex.lastIndex;
-    }
+  while ((match = urlRegex.exec(text)) !== null) {
+    const before = text.substring(lastIndex, match.index);
+    const url = match[1];
+    parts.push(<span key={lastIndex}>{before}Website: </span>);
+    parts.push(<a key={url} href={url} target="_blank" rel="noopener noreferrer">{url}</a>);
+    lastIndex = urlRegex.lastIndex;
+  }
 
-    parts.push(<span key={lastIndex}>{text.substring(lastIndex)}</span>);
-    return parts;
-  };
+  parts.push(<span key={lastIndex}>{text.substring(lastIndex)}</span>);
+  return parts;
+};
+
 
   return (
     <div style={{ fontFamily: "Arial", backgroundColor: "#f5f5f5", minHeight: "100vh" }}>
