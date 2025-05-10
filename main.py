@@ -1,12 +1,10 @@
-
-
-
 from fastapi import FastAPI
 from pydantic import BaseModel
 import pandas as pd
 from dotenv import load_dotenv
 from openai import OpenAI
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import os
 
 # .env içindeki API key'i yükle
@@ -18,13 +16,22 @@ client = OpenAI(
     organization=os.getenv("OPENAI_ORG_ID"),
     project=os.getenv("OPENAI_PROJECT_ID")
 )
+
 # FastAPI başlat
 app = FastAPI()
 
-# CSV dosyasını yükle
-df = pd.read_csv("Fixed_Cleaned_Start-up_databasee.csv")
+# CORS middleware ekle
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Geliştirme sürecinde sorun yaşamamak için tüm kaynaklara izin veriyoruz
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# API'ye gelecek input modeli
+# CSV dosyasını yükle
+df = pd.read_csv("Start-up-database.csv")
+
 class QuestionInput(BaseModel):
     question: str
 
@@ -32,7 +39,6 @@ class QuestionInput(BaseModel):
 async def ask_question(input: QuestionInput):
     question = input.question
 
-    # İlk 20 girişten bağlam oluştur
     context = df[['startupName', 'description', 'WebsiteLink']].head(20).to_string(index=False)
 
     prompt = f"""
@@ -42,7 +48,6 @@ Aşağıdaki startup veri setine göre en uygun çözümü öner. Açıklama ve 
 {context}
 """
 
-    # GPT'den yanıt al
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
