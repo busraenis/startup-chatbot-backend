@@ -20,10 +20,10 @@ client = OpenAI(
 # FastAPI başlat
 app = FastAPI()
 
-# CORS middleware ekle
+# CORS middleware ekle (frontend bağlantısı için)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Geliştirme sürecinde sorun yaşamamak için tüm kaynaklara izin veriyoruz
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,22 +32,40 @@ app.add_middleware(
 # CSV dosyasını yükle
 df = pd.read_csv("Start-up-database.csv")
 
+# API'ye gelecek input modeli
 class QuestionInput(BaseModel):
     question: str
+
+# Kullanıcının sorusuna göre sektörel filtreleme yapar
+def filter_relevant_startups(question: str):
+    keywords = ["sağlık", "finans", "eğitim", "enerji", "oyun", "yazılım", "tarım", "sigorta", "yapay zeka", "karbon"]
+    matched_sector = next((k for k in keywords if k in question.lower()), None)
+
+    if matched_sector:
+        filtered_df = df[df['description'].str.contains(matched_sector, case=False, na=False)]
+    else:
+        filtered_df = df  # eşleşme yoksa tüm dataset'i kullan
+
+    return filtered_df
 
 @app.post("/ask")
 async def ask_question(input: QuestionInput):
     question = input.question
 
-    context = df[['startupName', 'description', 'WebsiteLink']].head(20).to_string(index=False)
+    # Sektöre göre startup filtreleme
+    filtered_df = filter_relevant_startups(question)
+
+    # İlk 5 uygun startup'ı bağlam olarak al
+    context = filtered_df[['startupName', 'description', 'WebsiteLink']].head(5).to_string(index=False)
 
     prompt = f"""
 Kullanıcı bir çözüm arıyor: {question}
-Aşağıdaki startup veri setine göre en uygun çözümü öner. Açıklama ve web sitesini de ver.
+Aşağıdaki startup veri setine göre birden fazla uygun çözüm öner. Her startup için açıklama ve web sitesini belirt.
 
 {context}
 """
 
+    # GPT'den yanıt al
     response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
