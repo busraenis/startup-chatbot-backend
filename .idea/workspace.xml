@@ -7,8 +7,6 @@
     <list default="true" id="7a54e5fb-48aa-47ad-abd4-470ea40b7006" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/startup-chatbot-ui/src/App.js" beforeDir="false" afterPath="$PROJECT_DIR$/startup-chatbot-ui/src/App.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/startup.sh" beforeDir="false" afterPath="$PROJECT_DIR$/startup.sh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,7 +71,7 @@
       <option name="presentableId" value="Default" />
       <updated>1746772795846</updated>
       <workItem from="1746772800350" duration="1797000" />
-      <workItem from="1746774611763" duration="28905000" />
+      <workItem from="1746774611763" duration="36868000" />
     </task>
     <servers />
   </component>
